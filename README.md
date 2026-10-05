@@ -51,6 +51,10 @@ The commands below use `npm.cmd` for Windows PowerShell. In Command Prompt, macO
 
 6. Open `http://localhost:8000/login/index.html`. Express serves the front end, API, and Socket.io from the same origin. Do not use `python -m http.server` for the connected application.
 
+### Deploy to Vercel
+
+The project includes a Vercel Node.js entry point at [`server.js`](./server.js). Connect the GitHub repository to Vercel and set `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `JWT_SECRET` for Production in the Vercel project settings. The app uses Vercel's assigned production domain for CORS by default; if you use a custom domain, also set `FRONTEND_URL` to its origin (for example, `https://your-domain.com`). Then deploy the latest commit. Do not set `LOCAL_DEMO_MODE=true` in Vercel. The entry point includes the static frontend, API, and Socket.IO server in the Vercel function.
+
 ## API and real-time updates
 
 - Authentication: `/api/auth/signup`, `/api/auth/login`, `/api/auth/me`, and `/api/auth/forgot/*`.
