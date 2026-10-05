@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARS - Emergency SOS Simulator</title>
+  <link rel="icon" type="image/png" href="../assets/logo.png">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/auth.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="../assets/api.js?v=3"></script>
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/app-state.js"></script>
+</head>
+<body style="background-color: var(--bg-app); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;">
+  <div class="auth-card" style="max-width: 520px; border-color: rgba(225, 6, 0, 0.5); box-shadow: var(--shadow-red-glow);">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <img src="../assets/logo.png" alt="ARS Logo" style="width: 70px; height: 70px; margin-bottom: 12px;">
+      <h1 class="font-heading" style="font-size: 1.6rem; margin-bottom: 4px;">Victim Emergency SOS Simulator</h1>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">Trigger a real-time rescue dispatch signal across active control room dashboards.</p>
+    </div>
+
+    <div id="trigger-alert" class="alert-message"></div>
+
+    <form id="trigger-sos-form">
+      <div class="form-group">
+        <label for="victim-name">Victim Full Name</label>
+        <input type="text" id="victim-name" class="form-control" placeholder="Subhashini Nathan" style="padding-left: 16px;" required>
+      </div>
+
+      <div class="form-group">
+        <label for="victim-phone">Phone Number</label>
+        <input type="tel" id="victim-phone" class="form-control" placeholder="+91 97908 11223" style="padding-left: 16px;" required>
+      </div>
+
+      <div class="form-group">
+        <label for="preset-location">Select Preset Chennai Emergency Location</label>
+        <select id="preset-location" class="form-control" style="padding-left: 16px;">
+          <option value="custom">Custom Location (Enter Lat & Lng below)</option>
+          <option value="Velachery Main Road (Near Railway Station)" data-lat="12.9759" data-lng="80.2212" selected>Velachery Main Road (12.9759, 80.2212)</option>
+          <option value="Marina Beach (Light House Promenade)" data-lat="13.0380" data-lng="80.2785">Marina Beach Lighthouse (13.0380, 80.2785)</option>
+          <option value="Ranganathan Street, T. Nagar" data-lat="13.0418" data-lng="80.2341">Ranganathan St, T. Nagar (13.0418, 80.2341)</option>
+          <option value="Guindy Industrial Estate" data-lat="13.0067" data-lng="80.2020">Guindy Industrial Estate (13.0067, 80.2020)</option>
+          <option value="Besant Avenue, Adyar" data-lat="13.0012" data-lng="80.2565">Besant Ave, Adyar (13.0012, 80.2565)</option>
+          <option value="Mylapore Kapaleeshwarar Tank" data-lat="13.0339" data-lng="80.2694">Mylapore Tank Area (13.0339, 80.2694)</option>
+          <option value="Tambaram West Railway Colony" data-lat="12.9249" data-lng="80.1000">Tambaram Railway Colony (12.9249, 80.1000)</option>
+          <option value="Anna Nagar Tower Park Area" data-lat="13.0850" data-lng="80.2101">Anna Nagar Tower Park (13.0850, 80.2101)</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <div class="form-group" style="flex: 1;">
+          <label for="custom-lat">Latitude</label>
+          <input type="number" step="any" id="custom-lat" class="form-control" value="12.9759" style="padding-left: 16px; font-family: var(--font-mono);" required>
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label for="custom-lng">Longitude</label>
+          <input type="number" step="any" id="custom-lng" class="form-control" value="80.2212" style="padding-left: 16px; font-family: var(--font-mono);" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="sos-severity">Emergency Severity Level</label>
+        <select id="sos-severity" class="form-control" style="padding-left: 16px;" required>
+          <option value="high" selected>🔴 HIGH (Immediate Life Threat / Flooding / Collapse)</option>
+          <option value="medium">🟠 MEDIUM (Trapped / Vehicle Breakdown / Waterlogging)</option>
+          <option value="low">🟡 LOW (Water Pack Request / Minor Assist)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="sos-desc">Emergency Details & Request Description</label>
+        <textarea id="sos-desc" class="form-control" style="padding-left: 16px; min-height: 80px;" placeholder="Describe emergency situation..." required>Rising flood waters, immediate rescue boat dispatch required.</textarea>
+      </div>
+
+      <button type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-size: 1.1rem; box-shadow: var(--shadow-red-glow);">
+        🚨 BROADCAST DISTRESS SOS SIGNAL
+      </button>
+    </form>
+
+    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; font-size: 0.85rem;">
+      <a href="../rescuer/index.html" class="auth-link">← Go to Rescuer Dashboard</a>
+      <a href="../admin/index.html" class="auth-link">Go to Admin Dashboard →</a>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const presetSelect = document.getElementById('preset-location');
+      const latInput = document.getElementById('custom-lat');
+      const lngInput = document.getElementById('custom-lng');
+      const form = document.getElementById('trigger-sos-form');
+      const alertContainer = document.getElementById('trigger-alert');
+
+      presetSelect.addEventListener('change', () => {
+        const opt = presetSelect.options[presetSelect.selectedIndex];
+        if (opt.value !== 'custom') {
+          latInput.value = opt.dataset.lat;
+          lngInput.value = opt.dataset.lng;
+        }
+      });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const victimName = document.getElementById('victim-name').value.trim();
+        const victimPhone = document.getElementById('victim-phone').value.trim();
+        const lat = parseFloat(latInput.value);
+        const lng = parseFloat(lngInput.value);
+        const severity = document.getElementById('sos-severity').value;
+        const description = document.getElementById('sos-desc').value.trim();
+
+        try {
+          const response = await window.ARS_API.request('/sos', {
+            method: 'POST',
+            body: {
+              victimName,
+              victimPhone,
+              lat,
+              lng,
+              severity: severity[0].toUpperCase() + severity.slice(1),
+              description
+            }
+          });
+          alertContainer.className = 'alert-message active alert-success';
+          alertContainer.textContent = `🚨 SOS Signal ${response.sos.id} broadcast successfully. Open the dashboards to see the live update.`;
+        } catch (error) {
+          alertContainer.className = 'alert-message active alert-error';
+          alertContainer.textContent = error.message;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
