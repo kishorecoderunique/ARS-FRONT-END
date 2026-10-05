@@ -22,7 +22,7 @@ async function startServer() {
   });
   app.locals.config = config;
   app.set('io', io);
-  configureSockets(io, config.jwtSecret);
+  configureSockets(io, config.jwtSecret, config);
 
   app.disable('x-powered-by');
   app.use(helmet({ crossOriginEmbedderPolicy: false, contentSecurityPolicy: false }));
@@ -44,15 +44,26 @@ async function startServer() {
   app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
   const frontendRoot = path.join(__dirname, '..');
+  if (config.localDemoMode) {
+    app.get('/login/index.html', (req, res) => res.redirect('/admin/index.html'));
+  }
   ['/assets', '/data', '/login', '/rescuer', '/admin', '/trigger-sos'].forEach(route => {
     app.use(route, express.static(path.join(frontendRoot, route.slice(1)), { dotfiles: 'deny', index: 'index.html' }));
   });
-  app.get('/', (req, res) => res.sendFile(path.join(frontendRoot, 'index.html')));
+  if (config.localDemoMode) {
+    app.get('/', (req, res) => res.redirect('/admin/index.html'));
+  } else {
+    app.get('/', (req, res) => res.sendFile(path.join(frontendRoot, 'index.html')));
+  }
 
   app.use(notFound);
   app.use(errorHandler);
 
-  server.listen(config.port, () => console.log(`ARS server listening on port ${config.port}.`));
+  const host = config.localDemoMode ? '127.0.0.1' : undefined;
+  server.listen(config.port, host, () => {
+    const mode = config.localDemoMode ? ' (LOCAL DEMO MODE; authentication disabled)' : '';
+    console.log(`ARS server listening on ${host || 'all interfaces'}:${config.port}${mode}.`);
+  });
   const shutdown = async () => {
     server.close(async () => {
       process.exit(0);

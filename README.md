@@ -26,6 +26,7 @@ The commands below use `npm.cmd` for Windows PowerShell. In Command Prompt, macO
    - `SEED_ADMIN_PASSWORD` and `SEED_RESCUER_PASSWORD`: strong passwords used only by the seed script.
    - `FRONTEND_URL`: the origin used in the browser, e.g. `http://localhost:8000`.
    - `PORT`: defaults to `8000`.
+   - `LOCAL_DEMO_MODE`: set to `true` only for a local demo. It disables authentication and role checks for the dashboards and API; the server binds to `127.0.0.1` in this mode. Never enable it on a network-accessible deployment.
    - `SMS_PROVIDER`: `console` for local development, or `twilio` / `msg91`.
    - `SMS_API_KEY`: Twilio `accountSid:authToken` or an MSG91 auth key.
    - `SMS_FROM`: Twilio sender number, or MSG91 flow template ID.
@@ -57,7 +58,8 @@ The commands below use `npm.cmd` for Windows PowerShell. In Command Prompt, macO
 - Admin: `/api/admin/rescuers`, `/api/admin/stats`, and `/api/admin/sos/:id/assign`.
 - Rescuer duty: `PATCH /api/users/duty`.
 - Notifications: `/api/notifications`.
-- Socket.io room membership and events require the JWT received at login.
+- In standard mode, Socket.io room membership and events require the JWT received at login.
+- Local unauthenticated demo: set `LOCAL_DEMO_MODE=true` in `.env` and open `http://localhost:8000/`. This is strictly for local testing; it allows anyone with local access to view and modify application records.
 - Import [`postman/ARS.postman_collection.json`](./postman/ARS.postman_collection.json) into Postman to try the endpoints. Set the collection `token`, `sosId`, and `rescuerId` variables after login/list requests.
 
 ### Password reset SMS

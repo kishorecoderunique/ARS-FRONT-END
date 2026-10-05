@@ -74,7 +74,12 @@ async function listSos(filters = {}) {
     const rescuers = await listUsers({ ids: rescuerIds });
     const byId = new Map(rescuers.map(user => [user._id, user]));
     records.forEach(item => {
-      if (item.acceptedBy) item.acceptedBy = byId.get(item.acceptedBy) || item.acceptedBy;
+      if (item.acceptedBy) {
+        const rescuer = byId.get(item.acceptedBy);
+        item.acceptedBy = rescuer
+          ? { _id: rescuer._id, name: rescuer.name, phone: rescuer.phone }
+          : item.acceptedBy;
+      }
     });
   }
   return records;

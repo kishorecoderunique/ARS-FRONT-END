@@ -22,6 +22,7 @@ function loadEnv() {
   return {
     nodeEnv,
     port: Number(process.env.PORT || 8000),
+    localDemoMode: process.env.LOCAL_DEMO_MODE === 'true',
     supabaseUrl: supabaseUrl.toString().replace(/\/$/, ''),
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     jwtSecret: process.env.JWT_SECRET,
